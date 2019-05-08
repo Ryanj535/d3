@@ -11,7 +11,7 @@ var chartMargin = {
 
 // Dimensions of chart area
 var chartWidth = svgWidth - chartMargin.left - chartMargin.right;
-var chartHeight = svgHeight - chartMargin.top - chartMargin.botto
+var chartHeight = svgHeight - chartMargin.top - chartMargin.bottom
 
 // Building Chart
 var svg = d3.select('#scatter')
@@ -22,19 +22,18 @@ var svg = d3.select('#scatter')
 var chartGroup = svg.append("g")
   .attr("transform", `translate(${chartMargin.left}, ${chartMargin.top})`);
 
-d3.csv('./assets/data/data.csv', function(error, healthData) {
-  if (error) return console.warn(error);
+d3.csv('./assets/data/data.csv').then(function(healthData) {
   healthData.forEach(function(data) {
     data.healthcare = +data.healthcare;
     data.poverty = +data.poverty
     });
 
     var xLinearScale = d3.scaleLinear()
-     .domain([0, d3.max(healthData, d => d.poverty)])
+     .domain([d3.min(healthData, d => d.poverty) - 1.25, d3.max(healthData, d => d.poverty)])
      .range([0, chartWidth]);
 
    var yLinearScale = d3.scaleLinear()
-     .domain([0, d3.max(healthData, d => d.healthcare)])
+     .domain([d3.min(healthData, d => d.healthcare) - 2, d3.max(healthData, d => d.healthcare) + 1])
      .range([chartHeight, 0]);
 
     var bottomAxis = d3.axisBottom(xLinearScale);
@@ -53,20 +52,28 @@ d3.csv('./assets/data/data.csv', function(error, healthData) {
       .append("circle")
       .attr("cx", d => xLinearScale(d.poverty))
       .attr("cy", d => yLinearScale(d.healthcare))
-      .attr("r", "15")
+      .attr("r", "10")
       .attr("fill", "blue")
       .attr("opacity", ".5");
+      
+     var textGroup = chartGroup.selectAll("p")
+       .data(healthData)
+       .enter()
+       .append("p")
+       .attr("left", d => xLinearScale(d.poverty))
+       .attr("top", d => yLinearScale(d.healthcare))
+       .attr("p", d => d.abbr)
 
     var toolTip = d3.tip()
-      .attr("class", "tooltip")
+      .attr("class", "d3-tip")
       .offset([80, -60])
       .html(function(d) {
-        return (`${d.abbr}<br>poverty: ${d.poverty}<br>Healthcare: ${d.healthcare}`);
+        return (`${d.state}<br>poverty: ${d.poverty}<br>Healthcare: ${d.healthcare}`);
       });
 
     chartGroup.call(toolTip);
 
-    circlesGroup.on("click", function(data) {
+    circlesGroup.on("mouseover", function(data) {
       toolTip.show(data, this);
     })
       // onmouseout event
@@ -81,10 +88,10 @@ d3.csv('./assets/data/data.csv', function(error, healthData) {
       .attr("x", 0 - (chartHeight / 2))
       .attr("dy", "1em")
       .attr("class", "axisText")
-      .text("Number of Billboard 100 Hits");
+      .text("Healthcare");
 
     chartGroup.append("text")
       .attr("transform", `translate(${chartWidth / 2}, ${chartHeight + chartMargin.top + 30})`)
       .attr("class", "axisText")
-      .text("Hair Metal Band Hair Length (inches)");
+      .text("Poverty");
   });
