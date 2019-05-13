@@ -30,7 +30,6 @@ d3.csv('./assets/data/data.csv').then(function(healthData) {
     var xLinearScale = d3.scaleLinear()
      .domain([d3.min(healthData, d => d.poverty) - 1.25, d3.max(healthData, d => d.poverty)])
      .range([0, chartWidth]);
-
    var yLinearScale = d3.scaleLinear()
      .domain([d3.min(healthData, d => d.healthcare) - 2, d3.max(healthData, d => d.healthcare) + 1])
      .range([chartHeight, 0]);
@@ -55,15 +54,16 @@ d3.csv('./assets/data/data.csv').then(function(healthData) {
       .attr("fill", "blue")
       .attr("opacity", ".5");
 
-     var textGroup = chartGroup.selectAll("text")
+     var textGroup = chartGroup.append("text")
+       .selectAll("tspan")
        .data(healthData)
        .enter()
-       .append("text")
+       .append("tspan")
+       .attr("x", d => xLinearScale(d.poverty))
+       .attr("y", d => yLinearScale(d.healthcare) +3)
        .text(d => d.abbr)
-       .attr("dx", d => xLinearScale(d.poverty))
-       .attr("dy", d => yLinearScale(d.healthcare) +3)
        .attr("font-family", "sans-serif")
-       .attr("font-size", "8px")
+       .attr("font-size", 8)
        .attr("fill", "white")
        .attr("text-anchor", "middle");
 
